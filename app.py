@@ -14,7 +14,8 @@ if not api_key:
 else:
     # تهيئة المكتبة باستخدام المفتاح المدخل
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    # استخدام النموذج القياسي المدعوم للجميع
+    model = genai.GenerativeModel("gemini-pro")
 
     # حفظ سجل المحادثة
     if "messages" not in st.session_state:
