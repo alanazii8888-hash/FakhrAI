@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
 st.set_page_config(page_title="Fakhr AI", page_icon="🤖")
 
@@ -12,34 +12,31 @@ if not api_key:
     st.info("💡 من القائمة الجانبية لتشغيل التطبيق يرجى إدخال مفتاح API الخاص بك.")
 else:
     try:
-        genai.configure(api_key=api_key)
-        
-        # استخدام نموذج جيميناي 1.5 فلاش المباشر
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        # تهيئة العميل بالمكتبة الجديدة الرسمية
+        client = genai.Client(api_key=api_key)
 
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
+        # عرض الرسائل السابقة
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
+        # استقبال النص من المستخدم
         if prompt := st.chat_input("اكتب سؤالك هنا..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                try:
-                    response = model.generate_content(prompt)
-                    st.markdown(response.text)
-                    st.session_state.messages.append({"role": "assistant", "content": response.text})
-                except Exception as inner_e:
-                    # محاولة بديلة بنموذج gemini-1.5-pro في حال عدم دعم الأول
-                    alt_model = genai.GenerativeModel("gemini-1.5-pro")
-                    response = alt_model.generate_content(prompt)
-                    st.markdown(response.text)
-                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                # استدعاء النموذج الجديد المباشر
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt,
+                )
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
 
     except Exception as e:
-        st.error(f"حدث خطأ في الاتصال: {e}")
+        st.error(f"حدث خطأ أثناء الاتصال: {e}")
