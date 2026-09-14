@@ -9,27 +9,37 @@ st.caption("مشروع إعداد: طلال العنزي / يوسف العنزي
 api_key = st.sidebar.text_input("أدخل مفتاح Gemini API:", type="password")
 
 if not api_key:
-    st.info("💡 من القائمة الجانبية لتشغيل التطبيق يرجى إدخل مفتاح API الخاص بك.")
+    st.info("💡 من القائمة الجانبية لتشغيل التطبيق يرجى إدخال مفتاح API الخاص بك.")
 else:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    try:
+        genai.configure(api_key=api_key)
+        
+        # استخدام نموذج جيميناي 1.5 فلاش المباشر
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
 
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    if prompt := st.chat_input("اكتب سؤالك هنا..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        if prompt := st.chat_input("اكتب سؤالك هنا..."):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-        with st.chat_message("assistant"):
-            try:
-                response = model.generate_content(prompt)
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-            except Exception as e:
-                st.error(f"حدث خطأ: {e}")
+            with st.chat_message("assistant"):
+                try:
+                    response = model.generate_content(prompt)
+                    st.markdown(response.text)
+                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                except Exception as inner_e:
+                    # محاولة بديلة بنموذج gemini-1.5-pro في حال عدم دعم الأول
+                    alt_model = genai.GenerativeModel("gemini-1.5-pro")
+                    response = alt_model.generate_content(prompt)
+                    st.markdown(response.text)
+                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+
+    except Exception as e:
+        st.error(f"حدث خطأ في الاتصال: {e}")
